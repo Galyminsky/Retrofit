@@ -8,6 +8,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.proton.jobforandroid.retrofit.retrofit.ProductAPI
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -20,15 +22,21 @@ class MainActivity : AppCompatActivity() {
         val tvDes = findViewById<TextView>(R.id.tvDescription)
         val button = findViewById<Button>(R.id.btn)
 
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
+
+        val client = OkHttpClient.Builder()
+            .addInterceptor(interceptor).build()
+
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://dummyjson.com")
+            .baseUrl("https://dummyjson.com").client(client)
             .addConverterFactory(GsonConverterFactory.create()).build()
         val productAPI = retrofit.create(ProductAPI::class.java)
 
 
         button.setOnClickListener {
             CoroutineScope(Dispatchers.IO).launch {
-                val product = productAPI.getProductById(3)
+                val product = productAPI.getProductById(2)
                 runOnUiThread {
                     tvTitle.text = product.title
                     tvDes.text = product.description
