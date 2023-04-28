@@ -48,17 +48,6 @@ class MainActivity : AppCompatActivity() {
 
 //HardCore
         var user: User? = null
-        CoroutineScope(Dispatchers.IO).launch {
-            user = mainAPI.auth(
-                AuthRequest(
-                    "kminchelle",
-                    "0lelplR"
-                )
-            )
-            runOnUiThread {
-                supportActionBar?.title = user?.firstName
-            }
-        }
 
 
         binding.sv.setOnQueryTextListener(object : OnQueryTextListener {
