@@ -12,6 +12,7 @@ import me.proton.jobforandroid.retrofit.adapter.ProductAdapter
 import me.proton.jobforandroid.retrofit.databinding.ActivityMainBinding
 import me.proton.jobforandroid.retrofit.retrofit.AuthRequest
 import me.proton.jobforandroid.retrofit.retrofit.MainAPI
+import me.proton.jobforandroid.retrofit.retrofit.User
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -26,6 +27,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        supportActionBar?.title = "Guest"
 
         adapter = ProductAdapter()
         binding.rcView.layoutManager = LinearLayoutManager(this)
@@ -43,6 +46,21 @@ class MainActivity : AppCompatActivity() {
             .addConverterFactory(GsonConverterFactory.create()).build()
         val mainAPI = retrofit.create(MainAPI::class.java)
 
+//HardCore
+        var user: User? = null
+        CoroutineScope(Dispatchers.IO).launch {
+            user = mainAPI.auth(
+                AuthRequest(
+                    "kminchelle",
+                    "0lelplR"
+                )
+            )
+            runOnUiThread {
+                supportActionBar?.title = user?.firstName
+            }
+        }
+
+
         binding.sv.setOnQueryTextListener(object : OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return true
@@ -50,7 +68,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onQueryTextChange(text: String?): Boolean {
                 CoroutineScope(Dispatchers.IO).launch {
-                    val list = text?.let { mainAPI.getProductByName(it) }
+                    val list = text?.let { mainAPI.getProductByNameAuth(user?.token ?: "", it) }
                     runOnUiThread {
                         binding.apply {
                             adapter.submitList(list?.products)
