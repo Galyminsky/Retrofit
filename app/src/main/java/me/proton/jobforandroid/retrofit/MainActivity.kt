@@ -1,6 +1,7 @@
 package me.proton.jobforandroid.retrofit
 
 import android.os.Bundle
+import android.widget.SearchView.OnQueryTextListener
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.squareup.picasso.Picasso
@@ -31,7 +32,6 @@ class MainActivity : AppCompatActivity() {
         binding.rcView.adapter = adapter
 
 
-
         val interceptor = HttpLoggingInterceptor()
         interceptor.level = HttpLoggingInterceptor.Level.BODY
 
@@ -43,14 +43,22 @@ class MainActivity : AppCompatActivity() {
             .addConverterFactory(GsonConverterFactory.create()).build()
         val mainAPI = retrofit.create(MainAPI::class.java)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            val list = mainAPI.getAllProducts()
-                runOnUiThread {
-                    binding.apply {
-                        adapter.submitList(list.products)
-                    }
-                }
+        binding.sv.setOnQueryTextListener(object : OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return true
             }
 
+            override fun onQueryTextChange(text: String?): Boolean {
+                CoroutineScope(Dispatchers.IO).launch {
+                    val list = text?.let { mainAPI.getProductByName(it) }
+                    runOnUiThread {
+                        binding.apply {
+                            adapter.submitList(list?.products)
+                        }
+                    }
+                }
+                return true
+            }
+        })
     }
 }
