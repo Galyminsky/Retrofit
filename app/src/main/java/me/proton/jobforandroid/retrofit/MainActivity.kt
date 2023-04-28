@@ -2,10 +2,12 @@ package me.proton.jobforandroid.retrofit
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import me.proton.jobforandroid.retrofit.adapter.ProductAdapter
 import me.proton.jobforandroid.retrofit.databinding.ActivityMainBinding
 import me.proton.jobforandroid.retrofit.retrofit.AuthRequest
 import me.proton.jobforandroid.retrofit.retrofit.MainAPI
@@ -17,11 +19,17 @@ import retrofit2.converter.gson.GsonConverterFactory
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var adapter: ProductAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        adapter = ProductAdapter()
+        binding.rcView.layoutManager = LinearLayoutManager(this)
+        binding.rcView.adapter = adapter
+
 
 
         val interceptor = HttpLoggingInterceptor()
@@ -35,23 +43,14 @@ class MainActivity : AppCompatActivity() {
             .addConverterFactory(GsonConverterFactory.create()).build()
         val mainAPI = retrofit.create(MainAPI::class.java)
 
-
-        binding.btn.setOnClickListener {
-            CoroutineScope(Dispatchers.IO).launch {
-                val user = mainAPI.auth(
-                    AuthRequest(
-                        binding.userName.text.toString(),
-                        binding.userPassword.text.toString()
-                    )
-                )
+        CoroutineScope(Dispatchers.IO).launch {
+            val list = mainAPI.getAllProducts()
                 runOnUiThread {
                     binding.apply {
-                        Picasso.get().load(user.image).into(iv)
-                        firstName.text = user.firstName
-                        lastName.text = user.lastName
+                        adapter.submitList(list.products)
                     }
                 }
             }
-        }
+
     }
 }
